@@ -93,24 +93,6 @@ for s = 1, screen.count() do
 end
 -- }}}
 
--- {{{ Menu
--- Create a laucher widget and a main menu
-myawesomemenu = {
-   { "manual", terminal .. " -e man awesome" },
-   { "edit config", editor_cmd .. " " .. awesome.conffile },
-   { "restart", awesome.restart },
-   { "quit", awesome.quit }
-}
-
-mymainmenu = awful.menu({ items = { { "awesome", myawesomemenu, beautiful.awesome_icon },
-                                    { "Debian", debian.menu.Debian_menu.Debian },
-                                    { "open terminal", terminal }
-                                  }
-                        })
-
-mylauncher = awful.widget.launcher({ image = beautiful.awesome_icon,
-                                     menu = mymainmenu })
-
 -- Menubar configuration
 menubar.utils.terminal = terminal -- Set the terminal for applications that require it
 -- }}}
@@ -120,7 +102,26 @@ menubar.utils.terminal = terminal -- Set the terminal for applications that requ
 mytextclock = awful.widget.textclock()
 
 -- Volume control
-apw = require("apw/widget")
+local apw = require("apw/widget")
+
+-- Battery widget
+local lain = require("lain")
+markup = lain.util.markup
+white  = beautiful.fg_focus
+gray   = "#858585"
+bat = lain.widgets.bat({
+      settings = function()
+        bat_header = " Bat "
+        bat_p      = bat_now.perc .. " "
+
+        if bat_now.status == "Not present" then
+            bat_header = ""
+            bat_p      = ""
+        end
+
+        widget:set_markup(markup(gray, bat_header) .. markup(white, bat_p))
+    end
+})
 
 -- Create a wibox for each screen and add it
 mywibox = {}
@@ -194,7 +195,6 @@ for s = 1, screen.count() do
 
     -- Widgets that are aligned to the left
     local left_layout = wibox.layout.fixed.horizontal()
-    left_layout:add(mylauncher)
     left_layout:add(mytaglist[s])
     left_layout:add(mypromptbox[s])
 
@@ -202,6 +202,7 @@ for s = 1, screen.count() do
     local right_layout = wibox.layout.fixed.horizontal()
     if s == 1 then right_layout:add(wibox.widget.systray()) end
     right_layout:add(apw)
+    right_layout:add(bat)
     right_layout:add(mytextclock)
     right_layout:add(mylayoutbox[s])
 
@@ -217,17 +218,19 @@ end
 
 -- {{{ Mouse bindings
 root.buttons(awful.util.table.join(
-    awful.button({ }, 3, function () mymainmenu:toggle() end),
     awful.button({ }, 4, awful.tag.viewnext),
     awful.button({ }, 5, awful.tag.viewprev)
 ))
 -- }}}
+
+local conky = require("conky")
 
 -- {{{ Key bindings
 globalkeys = awful.util.table.join(
     awful.key({ }, "XF86AudioRaiseVolume",  apw.Up),
     awful.key({ }, "XF86AudioLowerVolume",  apw.Down),
     awful.key({ }, "XF86AudioMute",         apw.ToggleMute),
+    awful.key({}, "F10", function() toggle_conky() end),
     awful.key({ modkey,           }, "Left",   awful.tag.viewprev       ),
     awful.key({ modkey,           }, "Right",  awful.tag.viewnext       ),
     awful.key({ modkey,           }, "Escape", awful.tag.history.restore),
@@ -379,6 +382,14 @@ awful.rules.rules = {
       properties = { floating = true } },
     { rule = { class = "gimp" },
       properties = { floating = true } },
+    { rule = { class = "Conky" },
+      properties = {
+        floating = true,
+        sticky = true,
+        ontop = false,
+        focusable = false,
+        size_hints = {"program_position", "program_size"}
+    } }
     -- Set Firefox to always map on tags number 2 of screen 1.
     -- { rule = { class = "Firefox" },
     --   properties = { tag = tags[1][2] } },
