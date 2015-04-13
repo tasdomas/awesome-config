@@ -74,11 +74,15 @@ require("topbar")
 -- {{{ Mouse bindings
 root.buttons(awful.util.table.join(
     awful.button({ }, 4, awful.tag.viewnext),
-    awful.button({ }, 5, awful.tag.viewprev)
+    awful.button({ }, 4, awful.tag.viewprev)
 ))
 -- }}}
 
 require("keys")
+local globalkeys = global_keys(layouts, promptbox)
+root.keys(globalkeys)
+
+
 
 -- {{{ Rules
 -- Rules to apply to new clients (through the "manage" signal).

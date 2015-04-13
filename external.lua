@@ -11,3 +11,6 @@ awful.util.spawn_with_shell("dropbox start")
 
 -- unagi
 awful.util.spawn_with_shell("pgrep -u $USER -x unagi > /dev/null || (unagi &)")
+
+-- xautolock
+awful.util.spawn_with_shell("~/.config/awesome/scripts/locker.sh&")
